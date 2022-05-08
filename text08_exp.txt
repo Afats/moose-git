@@ -1,0 +1,12 @@
+Initialized empty shrug repository in .shrug
+shrug-rm: error: 'a' has changes staged in the index
+nothing to commit
+Committed as commit 0
+a - file changed, different changes staged for commit
+b - file changed, changes staged for commit
+c - file changed, changes not staged for commit
+x - file deleted
+e - deleted
+f - same as repo
+y - added to index
+z - untracked

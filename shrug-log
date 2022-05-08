@@ -1,0 +1,28 @@
+#!/bin/dash
+
+# prints a line for every commit made to the repository
+
+commit=".commit"
+shrug=".shrug"
+
+# go thru each commit_subdir: get subdirname and message from each one
+
+# check if .shrug exists
+if [ -d "$shrug" ]
+then
+    commit_files="$shrug/$commit"
+    for file in "$commit_files"/*
+    do
+        cval=$(basename "$file")
+        commit_subdir="$shrug/$commit/$cval"
+        cmsgfile="$commit_subdir/commit_msg.txt"
+        commit_msg=$(cat "$cmsgfile")
+        print_line="$cval $commit_msg"
+        echo "$print_line" >> "$shrug/all_commit_msgs.txt"
+    done
+
+tac "$shrug/all_commit_msgs.txt"
+else 
+    echo "shrug-log: error: no .shrug directory containing shrug repository exists" >&2
+    exit 1
+fi

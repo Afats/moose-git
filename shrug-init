@@ -1,0 +1,12 @@
+#!/bin/dash
+
+shrug=".shrug"
+
+if [ -d "$shrug" ]
+then
+    echo "shrug-init: error: $shrug already exists" >&2
+    exit 1
+
+else
+    mkdir $shrug 2> /dev/null && chmod 755 $shrug && printf "Initialized empty shrug repository in .shrug\n"
+fi

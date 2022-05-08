@@ -1,0 +1,11 @@
+Initialized empty shrug repository in .shrug
+Committed as commit 0
+shrug-show: error: unknown commit '1'
+shrug-show: error: 'c' not found in commit 0
+shrug-show: error: unknown commit '1'
+shrug-show: error: 'c' not found in index
+shrug-show: error: 'c' not found in index
+Committed as commit 1
+shrug-show: error: unknown commit '2'
+shrug-show: error: unknown commit '2'
+shrug-show: error: unknown commit '1'

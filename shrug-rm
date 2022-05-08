@@ -1,0 +1,191 @@
+#!/bin/dash
+
+shrug=".shrug"
+index=".index"
+stage=".stage"
+commit=".commit"
+forced_flag=0
+cached_flag=0
+cfile=".shrug/commit_num.txt"
+
+#TODO: update required list.txt's
+
+# check if .shrug exists
+if [ -d "$shrug" ]
+then
+
+for i in "$@"
+do
+    case $i in
+        --force)   
+                    forced_flag=$(($forced_flag+1))
+                    shift
+                    ;;
+        --cached)   
+                    cached_flag=$(($cached_flag+1))
+                    shift
+                    ;;
+        *)
+                    ;;
+    esac
+done
+
+
+#echo $forced_flag
+
+rm_index() {
+
+    file="$1"
+
+    cval=$(cat "$cfile")
+    if [ -f "$shrug/$commit/$cval/$file" ] && [ $forced_flag -eq 0 ]
+    then
+        diff_res=$(diff -b "$file" "$shrug/$commit/$cval/$file") 
+        if [ ! -z "$diff_res" ]
+        then
+            # if file is also in stage and different from commit and curr_dir REVIEW
+            if [ -f "$shrug/$index/$stage/$file" ] 
+            then
+                diff_res1=$(diff -b "$shrug/$index/$stage/$file" "$shrug/$commit/$cval/$file") 
+                diff_res2=$(diff -b "$shrug/$index/$stage/$file" "$file")
+                # stage file is diff from curr_dir and commit
+                if [ ! -z "$diff_res1" ] && [ ! -z "$diff_res2" ] 
+                then
+                    echo "shrug-rm: error: '$file' in index is different to both working file and repository" >&2
+                    exit 1
+                fi
+            fi
+        fi
+    fi
+
+    # if file exists in stage
+    if [ -f "$shrug/$index/$stage/$file" ] 
+    then
+        # update list.txt 
+        sed -i "/ $file/d" "$shrug/$index/$stage/list.txt" && sort -k2 -t' ' "$shrug/$index/$stage/list.txt" > "$shrug/$index/$stage/list1.txt" && mv "$shrug/$index/$stage/list1.txt" "$shrug/$index/$stage/list.txt"
+        rm "$shrug/$index/$stage/$file"
+    else
+        echo "shrug-rm: error: '$file' is not in the shrug repository" >&2  # -- review error
+        exit 1
+    fi
+}
+
+if [ -f "$cfile" ] && [ $cached_flag -eq 0 ] && [ $forced_flag -eq 0 ]
+then 
+    cval=$(cat "$cfile")
+    # check if file to be rm'ed is different from latest commit
+    for file in "$@"
+    do 
+        if [ -f "$shrug/$commit/$cval/$file" ]
+        then
+            diff_res=$(diff -b "$file" "$shrug/$commit/$cval/$file") 
+            if [ ! -z "$diff_res" ]
+            then
+                # if file is also in stage and different from commit and curr_dir REVIEW
+                if [ -f "$shrug/$index/$stage/$file" ] 
+                then
+                    diff_res1=$(diff -b "$shrug/$index/$stage/$file" "$shrug/$commit/$cval/$file") 
+                    diff_res2=$(diff -b "$shrug/$index/$stage/$file" "$file")
+                    
+
+                    # stage file is diff from curr_dir and commit
+                    if [ ! -z "$diff_res1" ] && [ ! -z "$diff_res2" ]
+                    then
+                        echo "shrug-rm: error: '$file' in index is different to both working file and repository" >&2
+                        exit 1
+                    else
+
+                        # print error if trying rm when staged files have not been committed
+                        if [ -f "$shrug/to_commit.txt" ] && [ $cached_flag -eq 0 ] && [ $forced_flag -eq 0 ]
+                        then
+
+                            while read filename; do
+                                for file in "$@"
+                                do
+                                    if [ $filename = $file ]
+                                    then
+                                        echo "shrug-rm: error: '$file' has changes staged in the index" >&2
+                                        exit 1
+                                    fi
+                                done
+                                done < "$shrug/to_commit.txt"
+                        fi
+
+                        # file in latest commit is different from file in curr_dir
+                        if [ $forced_flag -eq 0 ]
+                        then
+                            echo "shrug-rm: error: '$file' in repository is different to working file" >&2
+                            exit 1
+                        fi
+
+                    fi
+                
+                else
+                    if [ $forced_flag -eq 0 ]
+                    then
+                        # file in latest commit is different from file in curr_dir
+                        echo "shrug-rm: error: '$file' in repository is different to working file" >&2
+                        exit 1
+                    fi
+                fi
+            fi
+        fi
+    done
+fi
+
+# print error if trying rm when staged files have not been committed
+if [ -f "$shrug/to_commit.txt" ] && [ $cached_flag -eq 0 ] && [ $forced_flag -eq 0 ]
+then
+
+    while read filename; do
+        for file in "$@"
+        do
+            if [ $filename = $file ]
+            then
+                echo "shrug-rm: error: '$file' has changes staged in the index" >&2
+                exit 1
+            fi
+        done
+    done < "$shrug/to_commit.txt"
+fi
+
+# --cached option passed, remove file only from stage
+if [ $cached_flag -eq 1 ]
+then
+    for file in "$@"
+    do
+        rm_index "$file"
+    done
+else
+    # remove from both stage and current directory
+    curr_dir=$(pwd)
+
+    # remove from stage
+    for file in "$@"
+    do
+        rm_index "$file"
+    done
+
+    # remove from current directory 
+    for file in "$@"
+    do
+        # file is in curr_dir      
+        if [ -f "$curr_dir/$file" ]
+        then
+            rm "$curr_dir/$file"
+        else    
+             # suppress error if --forced option is passed
+            echo "shrug-rm: error: '$file' is not in the shrug repository" >&2  
+            exit 1
+        fi
+    done
+fi
+
+else 
+    echo "shrug-log: error: no .shrug directory containing shrug repository exists" >&2
+    exit 1
+fi
+
+
+
+

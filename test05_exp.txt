@@ -1,0 +1,8 @@
+Committed as commit 0
+Committed as commit 1
+nothing to commit
+nothing to commit
+nothing to commit
+amazing
+shrug-show: error: 'y' not found in index
+shrug-show: error: 'z' not found in index

@@ -1,0 +1,7 @@
+Initialized empty shrug repository in .shrug
+Committed as commit 0
+0 first commit 
+nothing to commit
+Committed as commit 1
+1 second commit 
+0 first commit 

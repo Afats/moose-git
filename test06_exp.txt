@@ -1,0 +1,9 @@
+Initialized empty shrug repository in .shrug
+testing rm
+Committed as commit 0
+shrug-add: error: can not open 'fil2'
+shrug-add: error: can not open 'fil'
+Committed as commit 1
+nothing to commit
+nothing to commit
+nothing to commit

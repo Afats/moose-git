@@ -1,0 +1,5 @@
+shrug-add: error: no .shrug directory containing shrug repository exists
+Initialized empty shrug repository in .shrug
+shrug-add: error: can not open 'cck'
+shrug-add: error: can not open 'x'
+

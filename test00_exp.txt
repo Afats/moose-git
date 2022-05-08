@@ -1,0 +1,4 @@
+ls: cannot access .shrug: No such file or directory
+Initialized empty shrug repository in .shrug
+.shrug
+shrug-init: error: .shrug already exists

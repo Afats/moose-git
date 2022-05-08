@@ -1,0 +1,2 @@
+Initialized empty shrug repository in .shrug
+.shrug

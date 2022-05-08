@@ -1,0 +1,93 @@
+#!/bin/dash
+
+shrug=".shrug"
+index=".index"
+stage=".stage"
+commit=".commit"
+cfile=".shrug/commit_num.txt"
+
+# check if .shrug exists
+if [ -d "$shrug" ]
+then
+    touch "$shrug/status.txt"
+    cval=$(cat "$cfile")
+    curr_dir="$(pwd)"
+
+    mv "$shrug/$commit/$cval/commit_msg.txt" "$shrug"
+    mv "$shrug/$commit/$cval/list.txt" "$shrug"
+    mv "$shrug/$index/$stage/list.txt" "$shrug/$index"
+
+    # loop through files in current directory
+    
+    for file in "$curr_dir"/*
+    do  
+        file="$(basename "$file")"
+        # if file is staged
+        if [ -e "$shrug/$index/$stage/$file" ]
+        then
+            diff_res=$(diff -b "$curr_dir/$file" "$shrug/$index/$stage/$file")
+
+            if [ -f "$shrug/$commit/$cval/$file" ]
+            then
+                diff_res1=$(diff -b "$shrug/$commit/$cval/$file" "$shrug/$index/$stage/$file")
+            fi
+
+            if [ -z "$diff_res" ]  
+            then
+                # no diff b/w curr_dir and stage files
+
+                if [ -z "$diff_res1" ] && [ -e "$shrug/$commit/$cval/$file" ]
+                then
+                    echo "$file - same as repo" >> "$shrug/status.txt" 
+                # file is staged but not in commit
+                elif [ ! -e "$shrug/$commit/$cval/$file" ]
+                then
+                    echo "$file - added to index" >> "$shrug/status.txt"
+                else
+                    echo "$file - file changed, changes staged for commit" >> "$shrug/status.txt"
+                fi
+    
+            elif [ -z "$diff_res1" ]
+            then
+                # no diff b/w commit and stage files, but diff between those files and curr_dir file
+                if [ ! -z "$diff_res" ]
+                then 
+                    echo "$file - file changed, changes not staged for commit" >> "$shrug/status.txt"
+                fi
+            else
+                # diff exists b/w curr_dir and stage files
+                echo "$file - file changed, different changes staged for commit" >> "$shrug/status.txt"
+            fi
+        else
+            # file is NOT staged
+
+            # file in curr_dir but not in index or commit
+            echo "$file - untracked" >> "$shrug/status.txt"
+        fi
+    done
+
+    for file in "$shrug/$commit/$cval"/*
+    do 
+        file="$(basename "$file")"
+        # file not in curr_dir and stage
+        if [ ! -e "$file" ] && [ ! -e "$shrug/$index/$stage/$file" ]
+        then
+            echo "$file - deleted" >> "$shrug/status.txt"
+
+        # file not in curr_dir
+        elif [ ! -e "$file" ]
+        then
+            echo "$file - file deleted" >> "$shrug/status.txt"
+        fi
+    done
+
+    mv "$shrug/list.txt" "$shrug/$commit/$cval"
+    mv "$shrug/commit_msg.txt" "$shrug/$commit/$cval"
+    mv "$shrug/$index/list.txt" "$shrug/$index/$stage"
+
+    sort "$shrug/status.txt"
+    rm "$shrug/status.txt"
+else 
+    echo "shrug-show: error: no .shrug directory containing shrug repository exists" >&2
+    exit 1
+fi

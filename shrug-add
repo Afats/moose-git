@@ -1,0 +1,71 @@
+#!/bin/dash
+
+index=".index"
+shrug=".shrug"
+stage=".stage"
+
+#TODO: filename check?
+
+# check if .shrug exists
+if [ -d "$shrug" ]
+then
+    
+    if [ -d "$shrug/$index" ]
+    then
+        :
+    else
+        # mkdir for .index
+        mkdir "$shrug/$index"
+    fi
+
+    if [ -d "$shrug/$index/$stage" ]
+    then
+        # copy contents of file into stage
+        :
+    else
+        # mkdir for ./index/.stage
+        mkdir "$shrug/$index/$stage"
+    fi
+
+    for file in "$@"
+    do
+        # if file exists in curr_dir
+        if [ -f "$file" ]
+        then
+            index_subdir="$shrug/$index/$stage"
+            cp "$file" $index_subdir
+
+            touch "$index_subdir/list.txt"
+            touch "$index_subdir/list1.txt"
+
+            # SHA values of file saved in an ordered list file 
+            sha1sum "$file" >> "$index_subdir/list.txt"
+            sort -k2 -t' ' "$index_subdir/list.txt" | uniq > "$index_subdir/list1.txt"
+            mv "$index_subdir/list1.txt" "$index_subdir/list.txt" 
+
+            # create a to_commit file to prevent deletion of work when using a shrug-rm -- remove file if successful commit
+            touch "$shrug/to_commit.txt"
+            echo "$file" >> "$shrug/to_commit.txt"
+
+        # file doesn't exist in curr_dir
+        else 
+            
+            # file is in stage but not in curr_dir
+            if [ -f "$shrug/$index/$stage/$file" ]
+            then 
+                # check if file is there in list. If so, remove file from list 
+                sed -i "/ $file/d" "$shrug/$index/$stage/list.txt" && sort -k2 -t' ' "$shrug/$index/$stage/list.txt" > "$shrug/$index/$stage/list1.txt" && mv "$shrug/$index/$stage/list1.txt" "$shrug/$index/$stage/list.txt"
+                
+                # remove file from stage
+                rm "$shrug/$index/$stage/$file"
+                exit 0
+            else
+                echo "shrug-add: error: can not open '$file'" >&2
+            fi
+        fi
+    done
+
+else 
+    echo "shrug-add: error: no .shrug directory containing shrug repository exists" >&2
+    exit 1
+fi

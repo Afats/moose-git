@@ -1,0 +1,180 @@
+#!/bin/dash
+
+#TODO: handle -a and -m together?
+
+export PATH="$PATH:/tmp_amd/reed/export/reed/1/z5232937/2041/ass1" # change to pwd?
+
+shrug=".shrug"
+stage=".stage"
+commit=".commit"
+index=".index"
+cfile=".shrug/commit_num.txt"
+
+# check if .shrug exists
+if [ -d "$shrug" ]
+then
+    add_all=0
+    a_flag=0
+    m_flag=0
+
+    # f is an internal, hidden option to force commit
+    while getopts "afm:" options; do
+        case "$options" in 
+            a)  add_all=1 
+                ignore=1  
+                a_flag=1  
+                ;;
+            f)  add_all=0  
+                ignore=1 
+                ;;
+            m)  commit_msg="$OPTARG"
+                ignore=0
+                add_all=0
+                m_flag=1
+                ;;
+            *)  add_all=0
+                ignore=0
+                ;;
+        esac
+    done
+
+    # if -a and -m
+    if [ $a_flag -eq 1 ] && [ $m_flag -eq 1 ]
+    then
+        # -a values takes precedence over -m values
+        add_all=1
+        ignore=1
+    fi
+
+    if [ $add_all -eq 1 ]
+    then
+        # -a option present
+        # shrug-add all files in current dir, then shrug-commit
+        dir=$(pwd)
+        for file in "$dir"/*
+        do
+            shrug-add "$file"
+        done
+        
+        # commit regardless of no change in files 
+        shrug-commit -f "$commit_msg" 
+    else
+
+        if [ -d "$shrug/$commit" ]
+        then
+            # copy contents of file into index
+            :
+        else
+            # mkdir and then copy contents into index 
+            mkdir "$shrug/$commit"
+        fi
+
+        if [ -f $cfile ]
+        then
+            # overrite index number to existing value +1
+            cval=$(cat "$cfile")
+            cval=$(( cval + 1 ))
+            echo $cval > $cfile 
+        else 
+            # commit is 0
+            touch $cfile
+            echo "0" > $cfile
+            cval=0 
+        fi
+
+        commit_subdir="${shrug}/${commit}/${cval}"
+        mkdir $commit_subdir
+        cmsgfile="${commit_subdir}/commit_msg.txt"
+
+        # save a copy of ALL files in .index/.stage to .commit repo   
+        flag=0
+        stage_files="${shrug}/${index}/${stage}"
+        for file in "$stage_files"/*
+        do  
+            cp "$file" $commit_subdir
+            touch $cmsgfile
+            echo "$commit_msg" > $cmsgfile
+            flag=1
+        done
+
+        # check if there is a need to commit or files have been unchanged from stage (or last commit?) or dont exist 
+        if ([ $cval -ge 1 ] && [ $ignore -eq 0 ]) 
+        then
+            old_cval=$(( cval - 1))
+
+            diff_res=$(diff -b "$commit_subdir/list.txt" "$shrug/$commit/$old_cval/list.txt")
+
+            if [ -z "$diff_res" ] 
+            then
+
+                echo "nothing to commit" >& 2
+                # remove latest commit and rst cval
+                rm -r $commit_subdir
+
+                if [ -f $cfile ]
+                then
+                    # overrite index number to existing value -1
+                    o_cval=$(cat "$cfile")
+
+                    if [ $o_cval -gt 0 ]
+                    then
+                        o_cval=$(( o_cval - 1 ))
+                        echo $o_cval > $cfile 
+                    fi
+                else 
+                    # commit is 0
+                    touch $cfile
+                    echo "0" > $cfile
+                    cval=0 
+                fi
+
+                flag=0
+                exit 0
+            fi
+
+        # if nothing is staged    
+        elif ([ ! -d $stage_files ] && [ $ignore -eq 0 ])
+        then
+            echo "nothing to commit" >& 2
+            # remove latest commit
+            rm -r $commit_subdir
+
+            if [ -f $cfile ]
+            then
+                # overrite index number to existing value -1
+                    o_cval=$(cat "$cfile")
+
+                    if [ $o_cval -gt 0 ]
+                    then
+                        o_cval=$(( o_cval - 1 ))
+                        echo $cval > $cfile 
+                    fi
+            else 
+                # commit is 0
+                touch $cfile
+                echo "0" > $cfile
+                cval=0 
+            fi
+            
+            flag=0
+            exit 0
+        else
+            :
+        fi
+
+        if [ $flag -eq 1 ]
+        then
+            echo "Committed as commit ${cval}" 
+
+            if [ -f "$shrug/to_commit.txt" ]
+            then 
+                rm -f "$shrug/to_commit.txt"
+            fi
+        else    
+            :
+        fi
+    fi
+else 
+    echo "shrug-commit: error: no .shrug directory containing shrug repository exists" >&2
+    exit 1
+fi

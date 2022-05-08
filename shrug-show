@@ -1,0 +1,70 @@
+#!/bin/dash
+
+commit=".commit"
+shrug=".shrug"
+index=".index"
+stage=".stage"
+
+str=$1
+commit_num="$(echo "$str" | cut -d':' -f1)"
+filename="$(echo "$str" | cut -d':' -f2)"
+
+commitflag=0
+if [ -d "$shrug" ]
+then
+
+    # if commit subdir matches commit_num, cycle through files
+    for files in "$shrug/$commit"/*
+    do 
+        file=$(basename "$files")
+        if [ "$file" = "$commit_num" ]
+        then
+            for subfile in "$shrug/$commit/$file"/*
+            do
+                # file found
+                subfile=$(basename "$subfile")
+                if [ "$subfile" = "$filename" ]
+                then
+                    cat "$shrug/$commit/$file/$filename"
+                    commitflag=1
+                    exit 0
+                fi
+            done 
+
+            if [ $commitflag -eq 0 ]; then
+                echo "shrug-show: error: '$filename' not found in commit $commit_num" >&2
+                exit 1
+            fi
+        fi
+        # if no commit num arg, check stage to see if file exists               
+        if [ -z "$commit_num" ] && [ $commitflag -eq 0 ]
+        then
+            for staged_files in "$shrug/$index/$stage"/*
+            do
+                staged_file=$(basename "$staged_files")
+                if [ "$staged_file" = "$filename" ]
+                then
+                    cat "$shrug/$index/$stage/$filename"
+                    commitflag=1
+                    exit 0
+                else 
+                    commitflag=1
+                    echo "shrug-show: error: '$filename' not found in index" >&2
+                    exit 1
+                fi   
+            done
+        fi
+    # file not found in commit or stage, check if commit_num is valid
+    done
+
+    if [ $commitflag -eq 0 ]
+        then
+            echo "shrug-show: error: unknown commit '$commit_num'" >&2
+            exit 1   
+        # file not found in commit subdir
+    fi
+
+else 
+    echo "shrug-show: error: no .shrug directory containing shrug repository exists" >&2
+    exit 1
+fi

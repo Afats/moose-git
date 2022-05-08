@@ -1,0 +1,20 @@
+Date        Start       Stop        Activity        Comments  
+9/07/20     21:00       10:00       Research        Read through the assignment specs
+9/07/20     10:10       12:15       Research        Read through the git technical specs and documentation
+9/07/20     12:15       3:30        Coding          Implementing shrug-init and shrug-add 
+9/07/20     3:30        4:30        Debugging       Debugging shrug-add, fixed some error mistakes
+10/07/20    18:00       20:00       Coding          Coding shrug-add and shrug-commit
+10/07/20    20:00       21:00       Research        Looking up gir-commit documentation
+10/07/20    20:00       1:00        Debugging       Debugging shrug-commit, fixed code to print appropriate error messages
+11/07/20    20:00       21:00       Coding          Coded up shrug-log and shrug-show
+11/07/20    21:00       22:00       Debugging       Fixed command command and printed appropriate error messages
+12/07/20    18:00       19:00       Debugging       Fixed shrug-show implementation and fixed some minor bugs
+13/07/20    16:30       17:00       Research        Looked up documentation for shrug-commit and shrug-rm
+13/07/20    19:00       21:00       Coding          Changed implementation for shrug-commit to fit -a option
+13/07/20    21:00       23:00       Coding          Implemented shrug-rm, writing of tests done 
+14/07/20    18:00       23:00       Debugging       Debugging for shrug-commit, then shrug-rm
+15/07/20    1:00        2:00        Coding          implementation for shrug-status coded up
+15/07/20    11:00       15:00       Debugging       Almost complete debugging for shrug-status completed, fixed outputs
+15/07/20    20:00       21:00       Testing         Ran completed tests to make sure it was targeting each function
+
+
